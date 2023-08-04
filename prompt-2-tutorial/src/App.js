@@ -5,7 +5,9 @@ import React, { useEffect, useState } from 'react';
 import { Player } from "@remotion/player";
 import { VideoComposition } from "./video/Composition";
 import Loader from "./components/loader";
+import Script from "./components/script";
 import testResponse from'./test-data.json';
+import logo from './vk1.png';
 
 const { Configuration, OpenAIApi } = require("openai");
 
@@ -14,7 +16,7 @@ const { Configuration, OpenAIApi } = require("openai");
 
 function App() {
 
-  const [topic, setTopic] = useState('');
+  const [topic, setTopic] = useState('Oranges');
   const [additionalTopics, setAdditionalTopics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -23,6 +25,7 @@ function App() {
   const [videoScript, setVideoScript] = useState([]);
   const [videoAvailable, setVideoAvailable] = useState(false);
   const [error, setError] = useState('');
+  const keys = [...Array(30).keys()];
 
   const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -83,18 +86,30 @@ function App() {
   return (
     <div className="App">
       <header className="prompts">
+        {keys.map((key) => <div key={key} class="particle"></div>)}
         <div className="row">
+        <div className="video-menu">
+            <img src={logo} alt="VK" className="logo"></img>
+            <div className="header-font">
+              <p className="logo-label-top">PROMPT</p>
+              <p className="logo-label-center">- to -</p>
+              <p className="logo-label-bottom">TUTORIAL</p>
+            </div>
+          </div>
           <div className="prompt-container">
             <h2 className="prompt-label">Video Subject</h2>
-            <PromptInput label={"What do you want to learn about?"} />
+            <PromptInput setTopic={setTopic} label={"What do you want to learn about?"} />
           </div>
           <div className="prompt-container">
           <h2 className="prompt-label">Additional Details</h2>
             <PromptInput label={"Is there anything specific it should cover?"} />
           </div>
         </div>
-        <div className="video-script">
-          {loading ? <Loader loadingMessage={loadingMessage} /> : <p className="video-script-content">{sections}{videoScript}</p>}
+        <div className="tab-group">
+          <div class="video-script-tab"><b className="video-script-tab-label">✨ Video Script: {topic}</b></div>
+          <div className="video-script">
+            {loading ? <Loader loadingMessage={loadingMessage} /> : <Script sections={sections} videoScript={videoScript} />}
+          </div>
         </div>
         <button className={videoAvailable ? "view-video" : "no-video"} onClick={async () => { await setTestScript(); }}>{videoAvailable ? "Video is Available! (Click to View)" : "Video will be available below"}</button>
       </header>
