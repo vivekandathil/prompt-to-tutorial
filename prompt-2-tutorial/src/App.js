@@ -4,16 +4,24 @@ import PromptInput from './components/prompt-input';
 import React, { useEffect, useState } from 'react';
 import { Player } from "@remotion/player";
 import { VideoComposition } from "./video/Composition";
+import Loader from "./components/loader";
+import testResponse from'./test-data.json';
 
 const { Configuration, OpenAIApi } = require("openai");
+
+// TODO: Text to speech: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/get-started-text-to-speech?tabs=macos%2Cterminal&pivots=programming-language-javascript
+// TODO: Bing Image Search: https://learn.microsoft.com/en-us/bing/search-apis/bing-image-search/quickstarts/rest/nodejs
 
 function App() {
 
   const [topic, setTopic] = useState('');
   const [additionalTopics, setAdditionalTopics] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [sections, setSections] = useState([]);
   const [openAIResponseText, setOpenAIResponseText] = useState('');
   const [videoScript, setVideoScript] = useState([]);
+  const [videoAvailable, setVideoAvailable] = useState(false);
   const [error, setError] = useState('');
 
   const configuration = new Configuration({
@@ -22,11 +30,35 @@ function App() {
 
   const openai = new OpenAIApi(configuration);
 
-  const setTestScript = (e) => {
-    setOpenAIResponseText("Turbochargers are a type of forced induction system that compresses the air flowing into the engine, allowing the engine to squeeze more air into a cylinder and burn more fuel each second. They work by using exhaust gas to spin a turbine that is attached to a second turbine that sucks air into the engine. The turbocharger is powered by the flow of exhaust gases and uses this energy to compress the intake gas, forcing more air into the engine in order to produce more power for a given displacement. The main difference between turbochargers and superchargers is their energy source. Turbochargers use the vehicle’s exhaust gas; two fans – a turbine fan and a compressor fan – rotate from exhaust gas. Conversely, superchargers are powered directly by the engine; a belt pulley drives gears that cause a compressor fan to rotate. In summary, turbochargers and superchargers are both air compressors that increase the power and efficiency of an engine. The main difference is that a supercharger is driven by the engine’s crankshaft, usually with a belt or chain, while a turbocharger is driven by the exhaust gas, with a turbine and a compressor");
-    setVideoScript(splitParagraphIntoSentences(openAIResponseText));
+  const setTestScript = async () => {
+    setVideoAvailable(false);
+    setLoading(true);
+    setLoadingMessage("Generating video scripts...")
+    await delayLoading(1600);
+    setLoadingMessage("Fetching images for visuals...")
+    await delayLoading(1600);
+    setLoadingMessage("Generating voiceovers...")
+    await delayLoading(1600);
+    setLoadingMessage("Rendering video...")
+    await delayLoading(1600);
+    setOpenAIResponseText(testResponse.text);
     console.log(videoScript);
+    setVideoAvailable(true);
   }
+
+  useEffect(() => {
+    console.log(openAIResponseText);
+    let sectionRegexMatches = [...openAIResponseText.matchAll(/(?<=\[Title\]).*?(?=\[\/Title\])/gm)];
+    let sectionsToAdd = [];
+    sectionRegexMatches.forEach(section => sectionsToAdd.push(section[0]));
+    setSections(sectionsToAdd);
+    setVideoScript(splitResponseIntoSections(openAIResponseText));
+    console.log(splitResponseIntoSections(openAIResponseText));
+    videoScript.forEach(section => {
+      console.log(section);
+    })
+    setLoading(false);
+  }, [openAIResponseText])
 
   const createScript = async (e) => {
     e.preventDefault();
@@ -34,7 +66,7 @@ function App() {
     try {
       const result = await openai.createCompletion({
         model: "gpt-4",
-        prompt: `Please generate a script for a detailed informational video on ${topic}. Separate the script into logical sections and provide a title for each section. The script should also include details on the following: ${additionalTopics}`,
+        prompt: `Please generate a script for a detailed informational video on ${topic}. Separate the script into logical sections and provide a title for each section. Each section title should start with "[Title]". The script should also include details on the following: ${additionalTopics}`,
         temperature: 0.5,
         max_tokens: 4000,
       });
@@ -51,19 +83,24 @@ function App() {
   return (
     <div className="App">
       <header className="prompts">
-        <div className="prompt-container">
-          <h2 className="prompt-label">Video Subject</h2>
-          <PromptInput label={"What do you want to learn about?"} />
+        <div className="row">
+          <div className="prompt-container">
+            <h2 className="prompt-label">Video Subject</h2>
+            <PromptInput label={"What do you want to learn about?"} />
+          </div>
+          <div className="prompt-container">
+          <h2 className="prompt-label">Additional Details</h2>
+            <PromptInput label={"Is there anything specific it should cover?"} />
+          </div>
         </div>
-        <div className="prompt-container">
-        <h2 className="prompt-label">Additional Details</h2>
-          <PromptInput label={"Is there anything specific it should cover?"} />
+        <div className="video-script">
+          {loading ? <Loader loadingMessage={loadingMessage} /> : <p className="video-script-content">{sections}{videoScript}</p>}
         </div>
+        <button className={videoAvailable ? "view-video" : "no-video"} onClick={async () => { await setTestScript(); }}>{videoAvailable ? "Video is Available! (Click to View)" : "Video will be available below"}</button>
       </header>
-      <button className="submit-button" onClick={(e) => setTestScript()}>Submit</button>
       <Player
         component={VideoComposition}
-        durationInFrames={120}
+        durationInFrames={(videoScript.length + 2) * 40}
         compositionWidth={1920}
         compositionHeight={1080}
         inputProps={{ text: 'hello', topics: videoScript}}
@@ -76,8 +113,13 @@ function App() {
 }
 
 function splitParagraphIntoSentences(paragraph) {
-  console.log(paragraph);
   return paragraph.split(/(?<=[.!?])\s+/);
 }
+
+function splitResponseIntoSections(response) {
+  return response.split(/(?<=\[Title\]).*?(?=\[\/Title\])/);
+}
+
+const delayLoading = ms => new Promise(res => setTimeout(res, ms));
 
 export default App;

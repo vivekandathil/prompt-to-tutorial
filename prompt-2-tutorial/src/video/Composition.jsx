@@ -11,9 +11,9 @@ export const VideoComposition = (props) => {
  
   return (
     <div>
-      <Sequence durationInFrames={10}></Sequence>
+      <Sequence durationInFrames={40}></Sequence>
       {props.topics.map((topic, index) =>           
-          <Sequence from={(index + 1) * 10} durationInFrames={10}>
+          <Sequence key={index} from={(index + 1) * 40} durationInFrames={40}>
               <div
                     style={{
                       flex: 1,
@@ -22,7 +22,7 @@ export const VideoComposition = (props) => {
                       color: 'black'
                     }}
                   >
-                    <div style={{ transform: `scale(${scale})` }}>{topic} {(index + 1) * 10}</div>
+                    <div>{topic} {(index + 1) * 40}</div>
                   </div>
           </Sequence>)
       }
