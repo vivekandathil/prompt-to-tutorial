@@ -10,10 +10,10 @@ function Script(props) {
 
   return (
     <div className="script">
-        {props.sections.map((section, index) => 
+        {props.sections.map((section) => 
             <div>
-                <p className="section-header">{section}</p>
-                <p className="video-script-content">{props.videoScript[index + 1]}</p>
+                <p className="section-header">{section.title}</p>
+                <p className="video-script-content">{section.narration}</p>
             </div>
         )}
     </div>

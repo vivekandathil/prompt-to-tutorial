@@ -21,8 +21,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [sections, setSections] = useState([]);
-  const [openAIResponseText, setOpenAIResponseText] = useState('');
-  const [videoScript, setVideoScript] = useState([]);
+  const [openAIResponseText, setOpenAIResponseText] = useState({});
   const [videoAvailable, setVideoAvailable] = useState(false);
   const [error, setError] = useState('');
   const keys = [...Array(30).keys()];
@@ -35,6 +34,7 @@ function App() {
 
   const setTestScript = async () => {
     setVideoAvailable(false);
+  
     setLoading(true);
     setLoadingMessage("Generating video scripts...")
     await delayLoading(1600);
@@ -44,23 +44,17 @@ function App() {
     await delayLoading(1600);
     setLoadingMessage("Rendering video...")
     await delayLoading(1600);
-    setOpenAIResponseText(testResponse.text);
-    console.log(videoScript);
+
+    setOpenAIResponseText(testResponse);
     setVideoAvailable(true);
   }
 
   useEffect(() => {
-    console.log(openAIResponseText);
-    let sectionRegexMatches = [...openAIResponseText.matchAll(/(?<=\[Title\]).*?(?=\[\/Title\])/gm)];
-    let sectionsToAdd = [];
-    sectionRegexMatches.forEach(section => sectionsToAdd.push(section[0]));
-    setSections(sectionsToAdd);
-    setVideoScript(splitResponseIntoSections(openAIResponseText));
-    console.log(splitResponseIntoSections(openAIResponseText));
-    videoScript.forEach(section => {
-      console.log(section);
-    })
-    setLoading(false);
+    if ("segments" in openAIResponseText) {
+      console.log(openAIResponseText);
+        setSections(openAIResponseText.segments);
+        setLoading(false);
+    }
   }, [openAIResponseText])
 
   const createScript = async (e) => {
@@ -69,17 +63,16 @@ function App() {
     try {
       const result = await openai.createCompletion({
         model: "gpt-4",
-        prompt: `Please generate a script for a detailed informational video on ${topic}. Separate the script into logical sections and provide a title for each section. Each section title should start with "[Title]". The script should also include details on the following: ${additionalTopics}`,
+        prompt: `Make me a informational video script about ${topic} in json format`,
         temperature: 0.5,
         max_tokens: 4000,
       });
       console.log("response", result.data.choices[0].text);
       setOpenAIResponseText(result.data.choices[0].text);
     } catch (e) {
-      console.log(e);
+      console.log(e); 
       setOpenAIResponseText("Something is going wrong, Please try again.");
     }
-    setVideoScript(splitParagraphIntoSentences(openAIResponseText));
     setLoading(false);
   };
 
@@ -108,17 +101,17 @@ function App() {
         <div className="tab-group">
           <div class="video-script-tab"><b className="video-script-tab-label">✨ Video Script: {topic}</b></div>
           <div className="video-script">
-            {loading ? <Loader loadingMessage={loadingMessage} /> : <Script sections={sections} videoScript={videoScript} />}
+            {loading ? <Loader loadingMessage={loadingMessage} /> : <Script sections={sections}/>}
           </div>
         </div>
         <button className={videoAvailable ? "view-video" : "no-video"} onClick={async () => { await setTestScript(); }}>{videoAvailable ? "Video is Available! (Click to View)" : "Video will be available below"}</button>
       </header>
       <Player
         component={VideoComposition}
-        durationInFrames={(videoScript.length + 2) * 40}
-        compositionWidth={1920}
+        durationInFrames={(sections.length + 2) * 40}
+        compositionWidth={window.innerWidth}
         compositionHeight={1080}
-        inputProps={{ text: 'hello', topics: videoScript}}
+        inputProps={{sections : sections}}
         fps={30}
         loop
         autoPlay

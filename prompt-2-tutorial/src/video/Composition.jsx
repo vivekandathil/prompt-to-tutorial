@@ -9,10 +9,13 @@ export const VideoComposition = (props) => {
     frame,
   });
  
+  // TODO: take in segment.visuals 
+  // make an api call to bing
+  
   return (
     <div>
       <Sequence durationInFrames={40}></Sequence>
-      {props.topics.map((topic, index) =>           
+      {props.sections.map((section, index) =>           
           <Sequence key={index} from={(index + 1) * 40} durationInFrames={40}>
               <div
                     style={{
@@ -22,7 +25,7 @@ export const VideoComposition = (props) => {
                       color: 'black'
                     }}
                   >
-                    <div>{topic} {(index + 1) * 40}</div>
+                    <div>{section.narration} {(index + 1) * 40}</div>
                   </div>
           </Sequence>)
       }
