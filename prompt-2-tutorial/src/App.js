@@ -8,11 +8,10 @@ import Loader from "./components/loader";
 import Script from "./components/script";
 import testResponse from'./test-data.json';
 import logo from './vk1.png';
+import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
+const { SpeechSynthesisOutputFormat, SpeechConfig, AudioConfig, SpeechSynthesizer, PassThrough } = require("microsoft-cognitiveservices-speech-sdk");
 
 const { Configuration, OpenAIApi } = require("openai");
-
-// TODO: Text to speech: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/get-started-text-to-speech?tabs=macos%2Cterminal&pivots=programming-language-javascript
-// TODO: Bing Image Search: https://learn.microsoft.com/en-us/bing/search-apis/bing-image-search/quickstarts/rest/nodejs
 
 function App() {
 
@@ -26,14 +25,44 @@ function App() {
   const [error, setError] = useState('');
   const keys = [...Array(30).keys()];
 
+  const speechKey = process.env.REACT_APP_SPEECH_KEY;
+  const region = process.env.REACT_APP_SPEECH_REGION;
+
   const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
   const openai = new OpenAIApi(configuration);
 
+  let audioFile = "VideoVoice.wav";
+
+  const speak = async (text) => {
+    const speechConfig = SpeechConfig.fromSubscription(speechKey, region);
+    // TODO: Let the user choose voice gender
+    speechConfig.speechSynthesisVoiceName = "en-US-GuyNeural";
+    speechConfig.speechSynthesisOutputFormat = SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3;
+    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+
+    const speechSynthesizer = new SpeechSynthesizer(speechConfig, audioConfig);
+    speechSynthesizer.speakTextAsync(
+      text,
+      result => {
+          if (result) {
+            console.log("Successfully synthesized voice over audio");
+              speechSynthesizer.close();
+              return result.audioData;
+          }
+      },
+      error => {
+          console.log(error);
+          speechSynthesizer.close();
+      });
+  };
+
   const setTestScript = async () => {
     setVideoAvailable(false);
+
+    speak("Hello")
   
     setLoading(true);
     setLoadingMessage("Generating video scripts...")
