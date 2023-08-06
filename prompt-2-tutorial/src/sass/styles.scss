@@ -137,6 +137,10 @@ body {
     text-align: left;
 }
 
+.video-player {
+  background-color: #270042;
+}
+
 .options-container {
   display: flex;
   flex-direction: row;
@@ -418,6 +422,12 @@ $input-text-active: #ffffff;
   background: rgba(255, 255, 255, 0.2);
   left: 0;
   top: 0;
+}
+
+.video-background {
+  background-color: white;
+  width: 100%;
+  height: 50%;
 }
 
 .background-particle {

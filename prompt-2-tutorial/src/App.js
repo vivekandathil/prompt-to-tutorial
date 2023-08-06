@@ -1,7 +1,8 @@
 import './App.css';
 import './sass/styles.scss';
 import PromptInput from './components/prompt-input';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { AbsoluteFill } from 'remotion';
 import { Player } from "@remotion/player";
 import { VideoComposition } from "./video/Composition";
 import GenerateButton from './components/menu/generate-button';
@@ -39,6 +40,14 @@ function App() {
   });
 
   const openai = new OpenAIApi(configuration);
+
+  const renderPoster = useCallback(({ height, width }) => {
+    return (
+      <AbsoluteFill style={{ backgroundColor: "gray" }}>
+        Click to play! ({height}x{width})
+      </AbsoluteFill>
+    );
+  }, []);
 
   const retrieveImagesFromBing = async () => {
     console.log(bingSearchKey)
@@ -178,18 +187,22 @@ function App() {
             {loading ? <Loader loadingMessage={loadingMessage} /> : <Script sections={sections}/>}
           </div>
         </div>
-        <button className={videoAvailable ? "view-video" : "no-video"} onClick={async () => { await setTestScript(); }}>{videoAvailable ? "Video is Available! (Click to View)" : "Video will be available below"}</button>
+        <button className={videoAvailable ? "view-video" : "no-video"} onClick={() => window.scrollTo(0, document.body.scrollHeight - 1100)}>{videoAvailable ? "Video is Available! (Click to View)" : "Video will be available below"}</button>
       </header>
-      <Player
-        component={VideoComposition}
-        durationInFrames={(sections.length + 2) * 40}
-        compositionWidth={window.innerWidth}
-        compositionHeight={1080}
-        inputProps={{sections : sections, images: visualAids}}
-        fps={30}
-        loop
-        autoPlay
-      />
+      <div className="video-player">
+        <Player
+          component={VideoComposition}
+          durationInFrames={(sections.length + 2) * 40}
+          compositionWidth={window.innerWidth - 80}
+          compositionHeight={1080}
+          style={{ margin: '0 auto', borderRadius: 10 }}
+          inputProps={{sections : sections, images: visualAids}}
+          renderPoster={renderPoster}
+          fps={30}
+          loop
+          autoPlay
+        />
+      </div>
     </div>
   );
 }

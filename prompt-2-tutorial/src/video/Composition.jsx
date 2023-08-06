@@ -13,7 +13,7 @@ export const VideoComposition = (props) => {
   // make an api call to bing
   
   return (
-    <div>
+    <div className="video-background">
       <Sequence durationInFrames={40}></Sequence>
       {props.sections.map((section, index) =>           
           <Sequence key={index} from={(index + 1) * 40} durationInFrames={40}>
@@ -21,12 +21,13 @@ export const VideoComposition = (props) => {
                     style={{
                       flex: 1,
                       textAlign: "center",
-                      fontSize: "7em",
+                      fontSize: "4em",
                       color: 'black'
                     }}
                   >
-                    <div>{section.narration} {(index + 1) * 40}</div>
-                    <img src={props.images[index]} style={{ width: 100, height: 100}} />
+                    <div style={{ fontWeight: 400 }}>{section.title}</div>
+                    <div style={{ fontWeight: 200 }}>{section.narration} {(index + 1) * 40}</div>
+                    <img src={props.images[index]} style={{ maxWidth: 200, maxHeight: 200, width: "auto", height: "auto" }} />
                   </div>
           </Sequence>)
       }
