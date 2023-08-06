@@ -16,7 +16,6 @@ const { Configuration, OpenAIApi } = require("openai");
 function App() {
 
   const [topic, setTopic] = useState('Oranges');
-  const [additionalTopics, setAdditionalTopics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [sections, setSections] = useState([]);
@@ -36,19 +35,26 @@ function App() {
 
   let audioFile = "VideoVoice.wav";
 
-  const speak = async (text) => {
+  const retrieveAudioFromScript = async (text) => {
     const speechConfig = SpeechConfig.fromSubscription(speechKey, region);
     // TODO: Let the user choose voice gender
     speechConfig.speechSynthesisVoiceName = "en-US-GuyNeural";
     speechConfig.speechSynthesisOutputFormat = SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3;
-    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+    // const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput;
 
-    const speechSynthesizer = new SpeechSynthesizer(speechConfig, audioConfig);
+    const speechSynthesizer = new SpeechSynthesizer(speechConfig);
     speechSynthesizer.speakTextAsync(
       text,
       result => {
           if (result) {
-            console.log("Successfully synthesized voice over audio");
+              console.log("Successfully synthesized voice over audio", result);
+              const blob = new Blob([result.audioData], { type: "audio/mp3" });
+              const url = window.URL.createObjectURL(blob);
+              let tempLink = document.createElement('a');
+              tempLink.href = url;
+              tempLink.setAttribute('download', '/Users/vivekkandathil/Downloads/filename.mp3');
+              tempLink.click();
+              console.log(url);
               speechSynthesizer.close();
               return result.audioData;
           }
@@ -61,8 +67,6 @@ function App() {
 
   const setTestScript = async () => {
     setVideoAvailable(false);
-
-    speak("Hello")
   
     setLoading(true);
     setLoadingMessage("Generating video scripts...")
@@ -82,6 +86,7 @@ function App() {
     if ("segments" in openAIResponseText) {
       console.log(openAIResponseText);
         setSections(openAIResponseText.segments);
+        retrieveAudioFromScript(openAIResponseText.segments[0].narration);
         setLoading(false);
     }
   }, [openAIResponseText])
