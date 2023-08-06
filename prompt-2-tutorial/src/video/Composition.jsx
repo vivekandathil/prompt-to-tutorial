@@ -26,6 +26,7 @@ export const VideoComposition = (props) => {
                     }}
                   >
                     <div>{section.narration} {(index + 1) * 40}</div>
+                    <img src={props.images[index]} style={{ width: 100, height: 100}} />
                   </div>
           </Sequence>)
       }
