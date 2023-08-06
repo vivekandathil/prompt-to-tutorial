@@ -23,6 +23,7 @@ function App() {
   const [videoAvailable, setVideoAvailable] = useState(false);
   const [error, setError] = useState('');
   const keys = [...Array(30).keys()];
+  const [audioBlobUrl, setAudioBlobUrl] = useState(null);
 
   const speechKey = process.env.REACT_APP_SPEECH_KEY;
   const region = process.env.REACT_APP_SPEECH_REGION;
@@ -32,8 +33,6 @@ function App() {
   });
 
   const openai = new OpenAIApi(configuration);
-
-  let audioFile = "VideoVoice.wav";
 
   const retrieveAudioFromScript = async (text) => {
     const speechConfig = SpeechConfig.fromSubscription(speechKey, region);
@@ -50,10 +49,11 @@ function App() {
               console.log("Successfully synthesized voice over audio", result);
               const blob = new Blob([result.audioData], { type: "audio/mp3" });
               const url = window.URL.createObjectURL(blob);
-              let tempLink = document.createElement('a');
-              tempLink.href = url;
-              tempLink.setAttribute('download', '/Users/vivekkandathil/Downloads/filename.mp3');
-              tempLink.click();
+              setAudioBlobUrl(url);
+              // let tempLink = document.createElement('a');
+              // tempLink.href = url;
+              // tempLink.setAttribute('download', './audio/filename.mp3');
+              // tempLink.click();
               console.log(url);
               speechSynthesizer.close();
               return result.audioData;
